@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-values
+  namespace: observability
+data:
+  values.yaml: |
+    service:
+      type: NodePort
+      nodePort: 30301
+    adminPassword: admin123
+    persistence:
+      enabled: true
+      storageClassName: standard
+      size: 5Gi
+    datasources:
+      datasources.yaml:
+        apiVersion: 1
+        datasources:
+        - name: Prometheus
+          type: prometheus
+          url: http://prometheus-server.observability.svc.cluster.local:80
+          access: proxy
+          isDefault: true
+        - name: Loki
+          type: loki
+          url: http://loki.observability.svc.cluster.local:3100
+          access: proxy
+        - name: Jaeger
+          type: jaeger
+          url: http://jaeger-query.observability.svc.cluster.local:16686
+          access: proxy

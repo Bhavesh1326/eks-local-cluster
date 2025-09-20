@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: istiod-values
+  namespace: istio-system
+data:
+  values.yaml: |
+    global:
+      meshID: mesh1
+      network: network1
+    pilot:
+      env:
+        PILOT_TRACE_SAMPLING: 100.0
+        EXTERNAL_ISTIOD: false

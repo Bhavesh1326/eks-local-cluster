@@ -1,0 +1,59 @@
+falco:
+  grpc:
+    enabled: true
+  grpcOutput:
+    enabled: true
+  httpOutput:
+    enabled: true
+    url: http://loki.observability.svc.cluster.local:3100/loki/api/v1/push
+  jsonOutput: true
+  jsonIncludeOutputProperty: true
+  logLevel: info
+
+driver:
+  kind: modern_ebpf
+
+falcoctl:
+  artifact:
+    install:
+      enabled: true
+    follow:
+      enabled: true
+
+customRules:
+  custom_rules.yaml: |-
+    - rule: Suspicious Shell Activity
+      desc: Detect suspicious shell activity in containers
+      condition: >
+        spawned_process and shell_procs and container
+      output: >
+        Suspicious shell activity detected (user=%user.name command=%proc.cmdline 
+        container=%container.name image=%container.image.repository)
+      priority: WARNING
+      tags: [shell, container]
+
+    - rule: Unexpected Network Connection
+      desc: Detect unexpected network connections from containers
+      condition: >
+        inbound_outbound and container and not proc.name in (user-service, product-service, order-service)
+      output: >
+        Unexpected network connection (user=%user.name command=%proc.cmdline 
+        connection=%fd.name container=%container.name)
+      priority: NOTICE
+      tags: [network, container]
+
+    - rule: File Access Outside Expected Paths
+      desc: Detect file access outside expected paths
+      condition: >
+        open_read and container and not fd.name startswith /proc and 
+        not fd.name startswith /sys and not fd.name startswith /tmp
+      output: >
+        Unexpected file access (user=%user.name file=%fd.name 
+        command=%proc.cmdline container=%container.name)
+      priority: WARNING
+      tags: [filesystem, container]
+
+tty: true
+
+nodeSelector:
+  kubernetes.io/os: linux

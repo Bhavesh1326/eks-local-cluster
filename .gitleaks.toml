@@ -1,0 +1,83 @@
+# Gitleaks configuration file
+title = "EKS Local Cluster Gitleaks Config"
+
+[extend]
+# Additional rule files can be referenced here
+# useDefault = true
+
+[[rules]]
+id = "aws-access-token"
+description = "AWS Access Token"
+regex = '''AKIA[0-9A-Z]{16}'''
+keywords = ["AKIA"]
+
+[[rules]]
+id = "aws-secret-key"
+description = "AWS Secret Key"
+regex = '''[0-9a-zA-Z/+]{40}'''
+keywords = ["aws", "secret"]
+
+[[rules]]
+id = "rsa-private-key"
+description = "RSA private key"
+regex = '''-----BEGIN RSA PRIVATE KEY-----'''
+
+[[rules]]
+id = "ssh-private-key"
+description = "SSH private key"
+regex = '''-----BEGIN OPENSSH PRIVATE KEY-----'''
+
+[[rules]]
+id = "pgp-private-key"
+description = "PGP private key"
+regex = '''-----BEGIN PGP PRIVATE KEY BLOCK-----'''
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API key"
+regex = '''[aA][pP][iI][_]?[kK][eE][yY].{0,30}[0-9a-zA-Z]{32,45}'''
+keywords = ["api", "key"]
+
+[[rules]]
+id = "slack-token"
+description = "Slack Token"
+regex = '''xox[baprs]-([0-9a-zA-Z]{10,48})?'''
+keywords = ["slack"]
+
+[[rules]]
+id = "slack-webhook"
+description = "Slack Webhook"
+regex = '''https://hooks.slack.com/services/T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}'''
+
+[[rules]]
+id = "github-access-token"
+description = "GitHub Personal Access Token"
+regex = '''ghp_[0-9a-zA-Z]{36}'''
+
+[[rules]]
+id = "password"
+description = "Password in configuration"
+regex = '''[pP][aA][sS][sS][wW][oO][rR][dD]['"]*\s*[:=]\s*['"][0-9a-zA-Z!@#$%^&*]{8,}['"]'''
+keywords = ["password"]
+
+[allowlist]
+description = "Allowlisted files and paths"
+paths = [
+    '''\.git/''',
+    '''node_modules/''',
+    '''vendor/''',
+    '''go.sum''',
+    '''package-lock.json''',
+    '''docs/setup-guide.md'''  # Allow our documentation
+]
+
+commits = [
+    # Add commit hashes to ignore if needed
+]
+
+regexes = [
+    '''example\.com''',
+    '''localhost''',
+    '''127\.0\.0\.1''',
+    '''admin123'''  # Our demo password for Grafana
+]

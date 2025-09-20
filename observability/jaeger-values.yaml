@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: jaeger-values
+  namespace: observability
+data:
+  values.yaml: |
+    allInOne:
+      enabled: true
+      args:
+        - --memory.max-traces=50000
+        - --query.base-path=/jaeger
+      ingress:
+        enabled: false
+      service:
+        type: NodePort
+        nodePort: 30686
+    storage:
+      type: memory
+    agent:
+      enabled: false
+    collector:
+      enabled: false
+    query:
+      enabled: false

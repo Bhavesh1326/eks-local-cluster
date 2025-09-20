@@ -1,0 +1,101 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: gitleaks-scan
+  namespace: default
+  labels:
+    app: gitleaks-scan
+    version: v1
+spec:
+  schedule: "0 1 * * *"  # Run daily at 1 AM
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: gitleaks-scan
+            version: v1
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: gitleaks
+            image: zricethezav/gitleaks:v8.18.0
+            command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Starting Gitleaks scan..."
+              cd /workspace
+              gitleaks detect --source . --config /.gitleaks.toml --verbose --report-format json --report-path /tmp/gitleaks-report.json || true
+              echo "Gitleaks scan completed"
+              if [ -f /tmp/gitleaks-report.json ]; then
+                echo "Found potential secrets:"
+                cat /tmp/gitleaks-report.json
+              else
+                echo "No secrets detected"
+              fi
+            volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+            - name: gitleaks-config
+              mountPath: /.gitleaks.toml
+              subPath: .gitleaks.toml
+            resources:
+              requests:
+                cpu: 100m
+                memory: 128Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
+            securityContext:
+              privileged: false
+              runAsNonRoot: true
+              runAsUser: 1000
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                - ALL
+          volumes:
+          - name: workspace
+            emptyDir: {}
+          - name: gitleaks-config
+            configMap:
+              name: gitleaks-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitleaks-config
+  namespace: default
+  labels:
+    app: gitleaks-scan
+    version: v1
+data:
+  .gitleaks.toml: |
+    title = "EKS Local Cluster Gitleaks Config"
+    
+    [[rules]]
+    id = "aws-access-token"
+    description = "AWS Access Token"
+    regex = '''AKIA[0-9A-Z]{16}'''
+    keywords = ["AKIA"]
+    
+    [[rules]]
+    id = "generic-api-key"
+    description = "Generic API key"
+    regex = '''[aA][pP][iI][_]?[kK][eE][yY].{0,30}[0-9a-zA-Z]{32,45}'''
+    keywords = ["api", "key"]
+    
+    [[rules]]
+    id = "password"
+    description = "Password in configuration"
+    regex = '''[pP][aA][sS][sS][wW][oO][rR][dD]['"]*\s*[:=]\s*['"][0-9a-zA-Z!@#$%^&*]{8,}['"]'''
+    keywords = ["password"]
+    
+    [allowlist]
+    description = "Allowlisted files and paths"
+    regexes = [
+        '''admin123''',
+        '''localhost''',
+        '''example\.com'''
+    ]
