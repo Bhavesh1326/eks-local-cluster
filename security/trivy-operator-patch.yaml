@@ -1,0 +1,9 @@
+metadata:
+  labels:
+    app: trivy-operator
+    version: v1
+    app.kubernetes.io/name: trivy-operator
+    app.kubernetes.io/instance: trivy-operator
+    app.kubernetes.io/version: "0.16.4"
+    app.kubernetes.io/component: security
+    app.kubernetes.io/part-of: security-stack
